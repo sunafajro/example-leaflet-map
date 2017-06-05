@@ -26,8 +26,15 @@ CustomButton = L.Control.extend({
         return btn;
     },
 });
+
 /* добавляем кнопку изменения режима карты */
 map.addControl(new CustomButton());
+
+/* запускаем отселживание кликов по карте */
+map.on('click', onMapClick);
+
+/* загружаем имеющиес маркеры из локального хранилища */
+loadMarkers();
 
 /* функция обрабатки клика по карте */
 function onMapClick(e) {
@@ -36,22 +43,22 @@ function onMapClick(e) {
         var marker_obj = {
             'lat': e.latlng.lat.toFixed(2),
             'lng': e.latlng.lng.toFixed(2),
-            'name': '',
-            'description': ''
+            'name': 'Без имени',
+            'description': 'Без описания',
+            'id': new Date().getTime(),
         }
         /* создаем маркер */
         var marker = L.marker([marker_obj.lat, marker_obj.lng], { draggable: true })
         .addTo(map)
         .bindPopup('<b>Название:</b> ' + marker_obj.name + '<br><b>Описание:</b> ' + marker_obj.description + '<br><b>Координаты:</b> ' + marker_obj.lat + ', ' + marker_obj.lng + '<br><a href="#" id="marker-delete-button">Del</a>');
+        /* добавляем данные маркера в сам объект маркера */
+        marker.popupdata = marker_obj;
         /* включаем отслеживание удаления маркера */
         marker.on("popupopen", onPopupOpen);
         /* сохраняем маркер в хранилище */
         storeMarker(marker_obj);
     }
 }
-
-/* запускаем отселживание кликов по карте */
-map.on('click', onMapClick);
 
 /* функция загрузки маркеров из локального хранилища */
 function loadMarkers() {
@@ -66,14 +73,16 @@ function loadMarkers() {
                 'lat': data.lat,
                 'lng': data.lng,
                 'name': data.name,
-                'description': data.name
+                'description': data.name,
+                'id': data.id,
             }
 
             var marker = L.marker([data.lat, data.lng], { draggable: true })
             .addTo(map)
             .bindPopup('<b>Название:</b> ' + data.name + '<br><b>Описание:</b> ' + data.description + '<br><b>Координаты:</b> ' + data.lat + ', ' + data.lng + '<br><a href="#" id="marker-delete-button">Delete</a>');
-
+            marker.popupdata = marker_obj;
             marker.on("popupopen", onPopupOpen);
+            marker.on("drag", onDragMarker);
             return marker;
         });
     }
@@ -92,9 +101,7 @@ function storeMarker(marker) {
     localStorage.setItem('markers', JSON.stringify(markers));
 }
 
-/* загружаем имеющиес маркеры из локального хранилища */
-loadMarkers();
-
+/* функция удаления маркера с карты */
 function onPopupOpen() {
     var tempMarker = this;
     $("#marker-delete-button:visible").click(function () {
@@ -113,4 +120,15 @@ function onPopupOpen() {
         }
         map.removeLayer(tempMarker);
     });
+}
+
+/* функция переноса маркера на карте */
+function onDragMarker(e) {
+    var marker = e.target;
+    marker.unbindPopup();    
+    var position = marker.getLatLng();
+    marker.popupdata.lat = position.lat.toFixed(2);
+    marker.popupdata.lng = position.lng.toFixed(2);
+    marker.bindPopup('<b>Название:</b> ' + marker.popupdata.name + '<br><b>Описание:</b> ' + marker.popupdata.description + '<br><b>Координаты:</b> ' + marker.popupdata.lat + ', ' + marker.popupdata.lng + '<br><a href="#" id="marker-delete-button">Delete</a>');
+    marker.on("popupopen", onPopupOpen);
 }
