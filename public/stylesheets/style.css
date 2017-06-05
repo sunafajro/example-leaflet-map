@@ -14,6 +14,10 @@ a {
 .leaflet-control-custom {
   width: 30px;
   height: 30px;
+  position: absolute;
+  top: 150px;
+  left: 70px;
+  z-index: 1000;
 }
 
 .writeOff {
@@ -29,4 +33,17 @@ a {
 }
 .writeOn:hover {
   background-color: gold;
+}
+
+.form-input {
+  display: none;
+  width: 200px;
+  border: 1px solid black;
+  padding: 3px;
+  text-align: center;
+  position: absolute;
+  top: 585px;
+  left: 60px;
+  z-index: 1000;
+  background-color: white;
 }

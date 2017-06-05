@@ -7,31 +7,16 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap' 
 }).addTo(map);
 
-/* создаем кнопку изменения режима карты */
-CustomButton = L.Control.extend({
-    /* указываем место для размещения кнопки */
-    options: {
-        position: 'topleft' 
-    },
-    /* метод создающий и возвращающий кнопку */
-    onAdd: function(map) {
-        var btn = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom writeOff');
-        /* отслеживаем клик по кнпоке для переключения режима работы с картой */
-        btn.onclick = function(){
-            if(map_mode == 'read') {
-                map_mode = 'write';
-                $('.leaflet-control-custom').removeClass('writeOff').addClass('writeOn');
-            } else {
-                map_mode = 'read';
-                $('.leaflet-control-custom').removeClass('writeOn').addClass('writeOff');
-            }
-        }
-        return btn;
-    },
+/* отслеживаем клик по кнпоке для переключения режима работы с картой */
+$('#btn-mode').click(function(){
+    if(map_mode == 'read') {
+        map_mode = 'write';
+        $('.leaflet-control-custom').removeClass('writeOff').addClass('writeOn');
+    } else {
+        map_mode = 'read';
+        $('.leaflet-control-custom').removeClass('writeOn').addClass('writeOff');
+    }
 });
-
-/* добавляем кнопку изменения режима работы карты */
-map.addControl(new CustomButton());
 
 /* запускаем отсележивание кликов по карте */
 map.on('click', onMapClick);
@@ -106,7 +91,9 @@ function storeMarker(marker) {
 /* Метод обработки открытия попапа маркера */
 function onPopupOpen() {
     var tempMarker = this;
-    /* при открытии попапа на лету обновляем данные о координатах маркера */
+    /* при открытии попапа на лету обновляем данные маркера */
+    $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
+    $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);
     $('#span_lat_' + tempMarker.marker_id).text(tempMarker.marker_lat.toFixed(2));
     $('#span_lng_' + tempMarker.marker_id).text(tempMarker.marker_lng.toFixed(2));
     if(map_mode != 'write') {
@@ -132,6 +119,23 @@ function onPopupOpen() {
         /* Удаляем маркер с карты */
         map.removeLayer(tempMarker);
     });
+    /* При нажатии на кнопку редактирования выводим форму редактирования имени и описания маркера */
+    $("#marker-edit-button:visible").click(function () {
+        $('#field_marker_name').val(tempMarker.marker_name);
+        $('#field_marker_description').val(tempMarker.marker_description);
+        /* Отслеживаем нажатие кнопки Сохранить и применяем новые данные */
+        $('#btn-save').click(function(){
+            tempMarker.marker_name = $('#field_marker_name').val();
+            $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
+            tempMarker.marker_description = $('#field_marker_description').val();
+            $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);            
+            updateMarker(tempMarker);
+            /* Прячем форму */
+            $('.form-input').hide();
+        });
+        /* Показываем форму */
+        $('.form-input').show();
+    });
     return;
 }
 
@@ -141,7 +145,7 @@ function onDragMarker(e) {
     var position = marker.getLatLng();
     marker.marker_lat = position.lat;
     marker.marker_lng = position.lng;
-    updateMarkerLatlng(marker);
+    updateMarker(marker);
     return;
 }
 
@@ -156,10 +160,12 @@ function saveToLocalStorage(markers_arr) {
 }
 
 /* Метод обновления координат в объекте массива markers_arr и localStorage */
-function updateMarkerLatlng(marker) {
+function updateMarker(marker) {
     var i = 0;
     markers_arr.forEach(function(item){
-        if(item.id = marker.marker_id) {
+        if(item.id == marker.marker_id) {
+            markers_arr[i].name = marker.marker_name;
+            markers_arr[i].description = marker.marker_description;
             markers_arr[i].lat = marker.marker_lat;
             markers_arr[i].lng = marker.marker_lng;
             saveToLocalStorage(markers_arr);
@@ -173,11 +179,13 @@ function updateMarkerLatlng(marker) {
 function createMarkerOnMap(data) {
     var marker = L.marker([data.lat, data.lng], { draggable: true })
     .addTo(map)
-    .bindPopup('<b>Название:</b> ' + data.name + '<br><b>Описание:</b> ' + data.description + '<br><b>Координаты:</b> <span id="span_lat_' + data.id +'"></span>, <span id="span_lng_' + data.id + '"></span><br><a href="#" id="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" id="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>');
+    .bindPopup('<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span><br><a href="#" id="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" id="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>');
     /* добавляем идентификатор маркера в сам объект маркера */
     marker.marker_id = data.id;
     marker.marker_lat = data.lat;
     marker.marker_lng = data.lng;
+    marker.marker_name = data.name;
+    marker.marker_description = data.description;
     /* включаем отслеживание открытия попапа маркера */
     marker.on("popupopen", onPopupOpen);
     /* включаем отслеживание переноса маркера */
