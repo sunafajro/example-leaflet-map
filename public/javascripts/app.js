@@ -62,7 +62,7 @@ function loadMarkers() {
                 'lat': data.lat,
                 'lng': data.lng,
                 'name': data.name,
-                'description': data.name,
+                'description': data.description,
                 'id': data.id,
             });
         });
@@ -84,7 +84,7 @@ function storeMarker(marker) {
     /* Добавляем маркер в основной массив markers_arr */
     markers_arr.push(marker);
     /* Сохраняем массив в localStorage */
-    saveToLocalStorage(markers_arr);
+    saveToLocalStorage();
     return;
 }
 
@@ -115,7 +115,7 @@ function onPopupOpen() {
             i++;
         });
         /* Сохраняем актуальный массив markers_arr в localStorage */
-        saveToLocalStorage(markers_arr);
+        saveToLocalStorage();
         /* Удаляем маркер с карты */
         map.removeLayer(tempMarker);
     });
@@ -128,7 +128,7 @@ function onPopupOpen() {
             tempMarker.marker_name = $('#field_marker_name').val();
             $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
             tempMarker.marker_description = $('#field_marker_description').val();
-            $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);            
+            $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);          
             updateMarker(tempMarker);
             /* Прячем форму */
             $('.form-input').hide();
@@ -150,8 +150,9 @@ function onDragMarker(e) {
 }
 
 /* Метод сохранения данные массива markers_arr в localStorage */
-function saveToLocalStorage(markers_arr) {
+function saveToLocalStorage() {
     var markers = [];
+    console.log(markers_arr);
     markers_arr.forEach(function(item) {
         markers.push(JSON.stringify(item));
     });
@@ -161,18 +162,16 @@ function saveToLocalStorage(markers_arr) {
 
 /* Метод обновления координат в объекте массива markers_arr и localStorage */
 function updateMarker(marker) {
-    var i = 0;
     markers_arr.forEach(function(item){
         if(item.id == marker.marker_id) {
-            markers_arr[i].name = marker.marker_name;
-            markers_arr[i].description = marker.marker_description;
-            markers_arr[i].lat = marker.marker_lat;
-            markers_arr[i].lng = marker.marker_lng;
-            saveToLocalStorage(markers_arr);
+            item.name = marker.marker_name;
+            item.description = marker.marker_description;
+            item.lat = marker.marker_lat;
+            item.lng = marker.marker_lng;
             return; 
         }
-        i++;
     });
+    saveToLocalStorage(markers_arr);
     return;
 }
 /* Метод создает маркер на карте и добавляет к нему попап */
