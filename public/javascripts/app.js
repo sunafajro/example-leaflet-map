@@ -140,6 +140,7 @@ function saveToLocalStorage() {
     markers_arr.forEach(function(item) {
         markers.push(JSON.stringify(item));
     });
+    /* Сохраняем актуальный массив markers_arr в localStorage */
     localStorage.setItem('markers', JSON.stringify(markers));
     return;
 }
