@@ -24,20 +24,14 @@ a {
   background-color: white;
 }
 
-.writeOff:hover {
-  background-color: #f4f4f4;
-}
-
 .writeOn {
   background-color: yellow;
-}
-.writeOn:hover {
-  background-color: gold;
 }
 
 .form-input {
   display: none;
   width: 200px;
+  height: 60px;
   border: 1px solid black;
   padding: 3px;
   text-align: center;

@@ -9,21 +9,15 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 
 /* отслеживаем клик по кнпоке для переключения режима работы с картой */
 $('#btn-mode').click(function(){
-    if(map_mode == 'read') {
-        map_mode = 'write';
-        clearMarkers();
-        printMarkers();
-        $('.leaflet-control-custom').removeClass('writeOff').addClass('writeOn');
-        /* Прячем форму */
-        $('.form-input').hide();
-    } else {
-        map_mode = 'read';
-        clearMarkers();
-        printMarkers();
-        $('.leaflet-control-custom').removeClass('writeOn').addClass('writeOff');
-        /* Прячем форму */
-        $('.form-input').hide();
-    }
+    map_mode = (map_mode == 'write') ? 'read' : 'write';
+    $('.leaflet-control-custom').text((map_mode == 'write') ? 'W' : 'R');
+    /* убираем маркеры с карты */
+    clearMarkers();
+    /* выводим маркеры по новой */
+    printMarkers();
+    $('.leaflet-control-custom').removeClass((map_mode == 'write') ? 'writeOff' : 'writeOn').addClass((map_mode == 'write') ? 'writeOn' : 'writeOff');
+    /* Прячем блок и удаляем содержимое */
+    clearMarkerForm();
 });
 
 /* запускаем отсележивание кликов по карте */
@@ -51,7 +45,10 @@ function onMapClick(e) {
             'id': new Date().getTime()
         }
         /* создаем маркер */
-        createMarkerOnMap(marker_obj);
+        var marker = createMarkerOnMap(marker_obj);
+        marker.openPopup();
+        /* открываем форму редактирования имени и описания */
+        editMarkerForm(marker);
         /* сохраняем маркер в хранилище */
         storeMarker(marker_obj);
     }
@@ -104,14 +101,7 @@ function onPopupOpen() {
     $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);
     $('#span_lat_' + tempMarker.marker_id).text(tempMarker.marker_lat.toFixed(2));
     $('#span_lng_' + tempMarker.marker_id).text(tempMarker.marker_lng.toFixed(2));
-    if(map_mode != 'write') {
-        $('#marker-edit-button').hide();
-        $('#marker-delete-button').hide();
-    } else {
-        $('#marker-edit-button').show();
-        $('#marker-delete-button').show();
-    }
-    /* Если произошел клик по ссылке удалить */
+    /*  При нажатии на кнопку удалить, убираем маркер с карты и удаляем обект из массива и localStorage */
     $("#marker-delete-button:visible").click(function () {      
         var i = 0;
         /* Убираем маркер из массива markers_arr */
@@ -129,24 +119,7 @@ function onPopupOpen() {
     });
     /* При нажатии на кнопку редактирования выводим форму редактирования имени и описания маркера */
     $("#marker-edit-button:visible").click(function () {
-        $('#field_marker_name').val(tempMarker.marker_name);
-        $('#field_marker_description').val(tempMarker.marker_description);
-        /* Отслеживаем нажатие кнопки Сохранить и применяем новые данные */
-        $('#btn-save').click(function(){
-            tempMarker.marker_name = $('#field_marker_name').val();
-            $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
-            tempMarker.marker_description = $('#field_marker_description').val();
-            $('#span_description_' + tempMarker.marker_id).text(tempMarker.marker_description);          
-            updateMarker(tempMarker);
-            /* Прячем форму */
-            $('.form-input').hide();
-        });
-        /* Показываем форму */
-        $('.form-input').show();
-    });
-    $('#btn-close').click(function(){
-        /* Прячем форму */
-        $('.form-input').hide();
+        editMarkerForm(tempMarker);
     });
     return;
 }
@@ -209,7 +182,7 @@ function createMarkerOnMap(data) {
         /* включаем отслеживание переноса маркера */
         marker.on("drag", onDragMarker);
     }
-    return;
+    return marker;
 }
 
 /* Убираем все маркеры с карты */
@@ -220,4 +193,36 @@ function clearMarkers() {
         }
     });
     return;
+}
+
+/* Метод генерирует форму редактирования имени и описания маркера */
+function editMarkerForm(marker) {
+    /* чистим блок и заполняем новыми полями */
+    $('.form-input').empty();
+    $('.form-input').append('<input id="field_marker_name" type="input" placeholder="Введите название" value="' + marker.marker_name +'">');
+    $('.form-input').append('<input id="field_marker_description" type="input" placeholder="Введите описание" value="' + marker.marker_description +'">');
+    $('.form-input').append('<button id="btn-save" type="submit">Сохранить</button>');
+    $('.form-input').append('<button id="btn-close" type="submit">Закрыть</button>');
+    /* Отслеживаем нажатие кнопки Сохранить и применяем новые данные */
+    $('#btn-save').click(function(){
+        marker.marker_name = $('#field_marker_name').val();
+        $('#span_name_' + marker.marker_id).text(marker.marker_name);
+        marker.marker_description = $('#field_marker_description').val();
+        $('#span_description_' + marker.marker_id).text(marker.marker_description);          
+        updateMarker(marker);
+        /* Прячем блок и удаляем содержимое */
+        clearMarkerForm();
+    });
+    /* Показываем форму */
+    $('.form-input').show();
+    $('#btn-close').click(function(){
+        /* Прячем блок и удаляем содержимое */
+        clearMarkerForm();
+    });
+}
+
+/* Метод прячет блок формы и удаляет элементы внутри блока */
+function clearMarkerForm() {
+    $('.form-input').hide();
+    $('.form-input').empty();
 }
