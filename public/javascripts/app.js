@@ -11,9 +11,13 @@ L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 $('#btn-mode').click(function(){
     if(map_mode == 'read') {
         map_mode = 'write';
+        clearMarkers();
+        printMarkers();
         $('.leaflet-control-custom').removeClass('writeOff').addClass('writeOn');
     } else {
         map_mode = 'read';
+        clearMarkers();
+        printMarkers();
         $('.leaflet-control-custom').removeClass('writeOn').addClass('writeOff');
     }
 });
@@ -29,7 +33,7 @@ map.on('click', onMapClick);
 var markers_arr = loadMarkers();
 
 /* Распечатываем маркеры на карту */
-printMarkers(markers_arr);
+printMarkers();
 
 /* Метод обрабатки клика по карте и добавления нового маркера */
 function onMapClick(e) {
@@ -40,7 +44,7 @@ function onMapClick(e) {
             'lng': e.latlng.lng,
             'name': 'Без имени',
             'description': 'Без описания',
-            'id': new Date().getTime(),
+            'id': new Date().getTime()
         }
         /* создаем маркер */
         createMarkerOnMap(marker_obj);
@@ -63,7 +67,7 @@ function loadMarkers() {
                 'lng': data.lng,
                 'name': data.name,
                 'description': data.description,
-                'id': data.id,
+                'id': data.id
             });
         });
     }
@@ -71,7 +75,7 @@ function loadMarkers() {
 }
 
 /* Метод для размещения массива маркеров на карте */
-function printMarkers(markers_arr) {
+function printMarkers() {
     markers_arr.forEach(function(data) {
         /* Добавляем маркер на карту и присоединяем к нему попап */
         createMarkerOnMap(data);
@@ -152,7 +156,6 @@ function onDragMarker(e) {
 /* Метод сохранения данные массива markers_arr в localStorage */
 function saveToLocalStorage() {
     var markers = [];
-    console.log(markers_arr);
     markers_arr.forEach(function(item) {
         markers.push(JSON.stringify(item));
     });
@@ -176,9 +179,16 @@ function updateMarker(marker) {
 }
 /* Метод создает маркер на карте и добавляет к нему попап */
 function createMarkerOnMap(data) {
-    var marker = L.marker([data.lat, data.lng], { draggable: true })
+    if(map_mode == 'write') {
+        var draggable = { draggable: 'true' }
+        var popup_string = '<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span><br><a href="#" id="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" id="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>';
+    } else {
+        var draggable = {}
+        var popup_string = '<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span>';
+    }
+    var marker = L.marker([data.lat, data.lng], draggable)
     .addTo(map)
-    .bindPopup('<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span><br><a href="#" id="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" id="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>');
+    .bindPopup(popup_string);
     /* добавляем идентификатор маркера в сам объект маркера */
     marker.marker_id = data.id;
     marker.marker_lat = data.lat;
@@ -187,7 +197,19 @@ function createMarkerOnMap(data) {
     marker.marker_description = data.description;
     /* включаем отслеживание открытия попапа маркера */
     marker.on("popupopen", onPopupOpen);
-    /* включаем отслеживание переноса маркера */
-    marker.on("drag", onDragMarker);
+    if(map_mode == 'write') {
+        /* включаем отслеживание переноса маркера */
+        marker.on("drag", onDragMarker);
+    }
+    return;
+}
+
+/* Убираем все маркеры с карты */
+function clearMarkers() {
+    map.eachLayer(function (layer) {
+        if(layer._latlng) {
+            map.removeLayer(layer);
+        }
+    });
     return;
 }
