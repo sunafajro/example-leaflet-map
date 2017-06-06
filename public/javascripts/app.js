@@ -95,6 +95,7 @@ function storeMarker(marker) {
 
 /* Метод обработки открытия попапа маркера */
 function onPopupOpen() {
+    console.log(this);
     var tempMarker = this;
     /* при открытии попапа на лету обновляем данные маркера */
     $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
@@ -102,7 +103,7 @@ function onPopupOpen() {
     $('#span_lat_' + tempMarker.marker_id).text(tempMarker.marker_lat.toFixed(2));
     $('#span_lng_' + tempMarker.marker_id).text(tempMarker.marker_lng.toFixed(2));
     /*  При нажатии на кнопку удалить, убираем маркер с карты и удаляем обект из массива и localStorage */
-    $("#marker-delete-button:visible").click(function () {      
+    $(".marker-delete-button").click(function () {      
         var i = 0;
         /* Убираем маркер из массива markers_arr */
         markers_arr.forEach(function(item) {
@@ -118,7 +119,7 @@ function onPopupOpen() {
         map.removeLayer(tempMarker);
     });
     /* При нажатии на кнопку редактирования выводим форму редактирования имени и описания маркера */
-    $("#marker-edit-button:visible").click(function () {
+    $(".marker-edit-button").click(function () {
         editMarkerForm(tempMarker);
     });
     return;
@@ -163,7 +164,7 @@ function updateMarker(marker) {
 function createMarkerOnMap(data) {
     if(map_mode == 'write') {
         var draggable = { draggable: 'true' }
-        var popup_string = '<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span><br><a href="#" id="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" id="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>';
+        var popup_string = '<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span><br><a href="#" class="marker-edit-button"><span class="fa fa-pencil" aria-hidden="true"></span></a> <a href="#" class="marker-delete-button"><span class="fa fa-trash" aria-hidden="true"></span></a>';
     } else {
         var draggable = {}
         var popup_string = '<b>Название:</b> <span id="span_name_' + data.id +'">none</span><br><b>Описание:</b> <span id="span_description_' + data.id +'">none</span><br><b>Координаты:</b> <span id="span_lat_' + data.id +'">0</span>, <span id="span_lng_' + data.id + '">0</span>';
@@ -178,10 +179,10 @@ function createMarkerOnMap(data) {
     marker.marker_name = data.name;
     marker.marker_description = data.description;
     /* включаем отслеживание открытия попапа маркера */
-    marker.on("popupopen", onPopupOpen);
+    marker.on('popupopen', onPopupOpen);
     if(map_mode == 'write') {
         /* включаем отслеживание переноса маркера */
-        marker.on("drag", onDragMarker);
+        marker.on('drag', onDragMarker);
     }
     return marker;
 }
