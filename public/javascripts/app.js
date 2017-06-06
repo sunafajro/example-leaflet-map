@@ -14,11 +14,15 @@ $('#btn-mode').click(function(){
         clearMarkers();
         printMarkers();
         $('.leaflet-control-custom').removeClass('writeOff').addClass('writeOn');
+        /* Прячем форму */
+        $('.form-input').hide();
     } else {
         map_mode = 'read';
         clearMarkers();
         printMarkers();
         $('.leaflet-control-custom').removeClass('writeOn').addClass('writeOff');
+        /* Прячем форму */
+        $('.form-input').hide();
     }
 });
 
@@ -139,6 +143,10 @@ function onPopupOpen() {
         });
         /* Показываем форму */
         $('.form-input').show();
+    });
+    $('#btn-close').click(function(){
+        /* Прячем форму */
+        $('.form-input').hide();
     });
     return;
 }
