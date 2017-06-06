@@ -95,7 +95,6 @@ function storeMarker(marker) {
 
 /* Метод обработки открытия попапа маркера */
 function onPopupOpen() {
-    console.log(this);
     var tempMarker = this;
     /* при открытии попапа на лету обновляем данные маркера */
     $('#span_name_' + tempMarker.marker_id).text(tempMarker.marker_name);
